@@ -3,6 +3,7 @@ import util
 from bs4 import BeautifulSoup as bs
 import requests as req
 import pandas as pd
+from textblob import TextBlob
 
 
 """ TODO
@@ -14,7 +15,7 @@ import pandas as pd
 
 
 LOC = 'San Francisco'
-SEARCH = 'thai food'
+SEARCH = 'Italian food'
 
 
 def _yelp_dish_parse(dish):
@@ -35,6 +36,21 @@ def _yelp_dish_parse(dish):
     return name, description, price
 
 
+def get_ingredients(itemDescription):
+	decriptionBlob = TextBlob(itemDescription)
+	ingredientBin = []
+	for np in decriptionBlob.noun_phrases:
+		blob = TextBlob(np)
+		tag = blob.tags
+		filteredTags = list(filter(lambda x: x[1] in ["NN", "NNS", "JJ"], tag))
+		if len(filteredTags) > 0:
+			ingredient = ""
+			for phrase in filteredTags:
+				ingredient += phrase[0] + " "
+			ingredientBin.append(ingredient.strip())
+	return ingredientBin
+
+
 def format_yelp_menu(menuLink):
     r = req.get(menuLink)
     s = bs(r.text, 'html.parser')
@@ -45,8 +61,8 @@ def format_yelp_menu(menuLink):
         name, description, price = _yelp_dish_parse(dish)
 
         """ TODO TextBlob description Analysis """
-        # if description is not None:
-        #     description = format_description(description)
+        if description is not None:
+            description = get_ingredients(description + name)
         if name is not None:
             dishDict[name] = {
                 'ingredients': description,
