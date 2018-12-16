@@ -42,7 +42,7 @@ def print_sorted_data(data, s):  # _ratingSort
         print(rest['name'], rest['rating'])
 
 
-def get_restaurant_menu(name):
+def get_restaurant_menu_link(name):
     """ Google search --> Yelp lookup """
     r = req.get('https://www.google.com/search?q=' + name + ' yelp')
     s = bs(r.text, 'html.parser')
@@ -58,7 +58,7 @@ def get_restaurant_menu(name):
         return menuLink
     else:
         print("Failed with yelp, will keep trying lol")
-        return False
+        return None
 
 
 def get_yelp_menu_link(link):

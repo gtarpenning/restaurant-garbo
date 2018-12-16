@@ -2,6 +2,8 @@
 import util
 from bs4 import BeautifulSoup as bs
 import requests as req
+import pandas as pd
+
 
 """ TODO
 - Finish creating dictionary of every ingredient in every dish on menu
@@ -55,14 +57,18 @@ def format_yelp_menu(menuLink):
 
 
 def make_menu_bin():
-    # searchBin = util.google_search('la viga')
     yelpBin = util.get_top_yelp(location=LOC, term=SEARCH, num=20)
     for restaurant in yelpBin['businesses']:
         print('\n' + restaurant['name'])
-        # print("Checking out " + restaurant['name'] + "'s menu")
         menuLink = util.get_restaurant_menu_link(name=restaurant['name'])
-        menuDict = format_yelp_menu(menuLink)
-        print(menuDict)
+        menuDict = {}
+        if menuLink is not None:
+            menuDict = format_yelp_menu(menuLink)
+        else:
+            print("Trying non yelp solution")
+
+        menuDF = pd.DataFrame(menuDict).transpose()
+        print(menuDF)
 
 
 make_menu_bin()
