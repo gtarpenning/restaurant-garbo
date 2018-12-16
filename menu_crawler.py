@@ -41,6 +41,10 @@ def format_yelp_menu(menuLink):
     dishDict = {}
     for dish in menu.find_all('div', {'class': 'arrange_unit'}):
         name, description, price = _yelp_dish_parse(dish)
+
+        """ TODO TextBlob description Analysis """
+        # if description is not None:
+        #     description = format_description(description)
         if name is not None:
             dishDict[name] = {
                 'ingredients': description,
