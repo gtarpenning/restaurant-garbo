@@ -39,6 +39,8 @@ def format_yelp_menu(menuLink):
     r = req.get(menuLink)
     s = bs(r.text, 'html.parser')
     menu = s.find('div', {'class': 'container biz-menu'})
+    if menu is None:  # NO YELP MENU
+        return None
 
     dishDict = {}
     for dish in menu.find_all('div', {'class': 'arrange_unit'}):
@@ -56,17 +58,44 @@ def format_yelp_menu(menuLink):
     return dishDict
 
 
+def get_menu_from_html(link):
+    r = req.get(link)
+    s = bs(r.text, 'html.parser')
+    body = s.body
+    h1 = body.find_all('h1')
+    h2 = body.find_all('h2')
+    h3 = body.find_all('h3')
+    h4 = body.find_all('p')
+    print(h1, h2, h3, h4)
+
+
+def get_menu_from_menupages(link):
+    # https://menupages.com/mangrove-kitchen/312-divisadero-st-san-francisco
+    print('TODO')
+
+
+def get_non_yelp_menu(name):
+    link = util.find_google_menu_link(name, 'menupages')
+    print(link)
+    if 'menupages' in link:
+        return get_menu_from_menupages(link)
+
+    link = util.find_google_menu_link(name, 'menu')
+    if 'html' in link:
+        print("trying to rawdog it")
+        return get_menu_from_html(link)
+
+    return None
+
+
 def make_menu_bin():
     yelpBin = util.get_top_yelp(location=LOC, term=SEARCH, num=20)
     for restaurant in yelpBin['businesses']:
-        print('\n' + restaurant['name'])
-        menuLink = util.get_restaurant_menu_link(name=restaurant['name'])
-        menuDict = {}
-        if menuLink is not None:
-            menuDict = format_yelp_menu(menuLink)
-        else:
-            print("Trying non yelp solution")
-
+        maybeYelpUrl = restaurant['url'].split('/biz')[1].split('?')[0]
+        menuDict = format_yelp_menu('https://www.yelp.com/menu' + maybeYelpUrl)
+        if menuDict is None:
+            print("No Yelp menu, or something broke, trying non")
+            menuDict = get_non_yelp_menu(restaurant['name'])
         menuDF = pd.DataFrame(menuDict).transpose()
         print(menuDF)
 

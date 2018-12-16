@@ -42,25 +42,6 @@ def print_sorted_data(data, s):  # _ratingSort
         print(rest['name'], rest['rating'])
 
 
-def get_restaurant_menu_link(name):
-    """ Google search --> Yelp lookup """
-    r = req.get('https://www.google.com/search?q=' + name + ' yelp')
-    s = bs(r.text, 'html.parser')
-    # This is finding the first link on google responses
-    resp = s.find('div', {'class': 'g'})
-    aTag = resp.find('a', href=True)
-    # Format the found link to be a normal link
-    link = aTag['href'].split('=')[1].split('&')[0]
-
-    """ SOME ERROR HANDLING FOR NON YELP NEEDED"""
-    menuLink = get_yelp_menu_link(link)
-    if menuLink:
-        return menuLink
-    else:
-        print("Failed with yelp, will keep trying lol")
-        return None
-
-
 def get_yelp_menu_link(link):
     r = req.get(link)
     s = bs(r.text, 'html.parser')
@@ -70,6 +51,17 @@ def get_yelp_menu_link(link):
     else:
         print("Tried to find menu, FAILED")
         return False
+
+
+def find_google_menu_link(name, term):
+    """ Google search --> Yelp lookup """
+    r = req.get('https://www.google.com/search?q=' + name + " " + term)
+    s = bs(r.text, 'html.parser')
+    # This is finding the first link on google responses
+    resp = s.find('div', {'class': 'g'})
+    aTag = resp.find('a', href=True)
+    # Format the found link to be a normal link
+    return aTag['href'].split('=')[1].split('&')[0]
 
 
 def get_top_yelp(location, term, num):
