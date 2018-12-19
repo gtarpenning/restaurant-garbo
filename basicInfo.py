@@ -32,20 +32,22 @@ def get_rest_info(id):
     infoBin += [price, restHours, coords, categories, phone, isClaimed, transactions]
     return infoBin
 
-def main():
-    num_restaurants = 5
-    restaurants = util.get_top_yelp(LOC, TERM, num_restaurants)['businesses']
+def make_df_for_rests(loc, term, numRestaurants):
+    restaurants = util.get_top_yelp(loc, term, numRestaurants)['businesses']
     restNames = []
     restInfo = []
     for rest in restaurants:
         restNames.append(rest['name'])
         restInfo.append(get_rest_info(rest['id']))
     axes = ['price', 'hours', 'coordinates', 'categories', 'phone', 'isClaimed', 'transactions']
-    #print (restNames)
-    #print (restInfo)
     df = pd.DataFrame.from_dict(dict(zip(restNames,restInfo)),
         orient='index', columns=axes)
+    return df
+
+def main():
+    numRestaurants = 5
+    df1 = make_df_for_rests(LOC, TERM, numRestaurants)
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-        print(df)
+        print(df1)
 
 main()
