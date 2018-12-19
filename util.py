@@ -4,11 +4,13 @@ from bs4 import BeautifulSoup as bs
 
 # Yelp API key
 API_KEY = 'RERrcqtrW3V1ARX5kr_3VC9H8DnboL7bkyVf5HdQ-XiRi-hPm2jX_TRBUuc8lDFtYKKF2B_PT1fDai2hsVwCdirNc5Hrk7k9krlw7Vt---u9tZTXjbDZGRyYAxnOW3Yx'
+# City to locate Infatuation reviews
+CITY = 'San Francisco'
 
 
-def get_all_infatuation():
+def get_all_infatuation(city):
     r = req.get('https://www.theinfatuation.com/api/v1/reviews?' +
-                'sort=&city=san-francisco&offset=16&limit=1000')
+                'sort=&city=' + city + '&offset=16&limit=1000')
     if r.status_code != 200:
         print('Something is broken with the infatuation request')
         return False
@@ -79,5 +81,6 @@ def get_top_yelp(location, term, num):
 
 
 if __name__ == '__main__':
-    data = get_all_infatuation()
+    c = CITY.replace(' ', '-')
+    data = get_all_infatuation(c)
     print_sorted_data(data, _ratingSort)
