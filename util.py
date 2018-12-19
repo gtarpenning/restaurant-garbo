@@ -1,6 +1,8 @@
 """ Quick Restaurant Data Scraping (AGGREGATION) """
 import requests as req
 from bs4 import BeautifulSoup as bs
+import pickle
+
 
 # Yelp API key
 API_KEY = 'RERrcqtrW3V1ARX5kr_3VC9H8DnboL7bkyVf5HdQ-XiRi-hPm2jX_TRBUuc8lDFtYKKF2B_PT1fDai2hsVwCdirNc5Hrk7k9krlw7Vt---u9tZTXjbDZGRyYAxnOW3Yx'
@@ -40,3 +42,18 @@ def get_top_yelp(location, term, num):
     response = r.json()
 
     return response
+
+
+def store_data(data, fileName):
+    with open(fileName, "wb") as f:
+        pickle.dump(data, f)
+
+
+def open_data(fileName):
+    d = None
+    try:
+        with open(fileName, 'rb') as f:
+            d = pickle.load(f)
+    except Exception:
+        d = None
+    return d
