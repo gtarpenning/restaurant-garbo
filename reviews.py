@@ -4,48 +4,11 @@ from bs4 import BeautifulSoup as bs
 import requests as req
 import pandas as pd
 import numpy as np
-from selenium import webdriver
 from tqdm import tqdm
-import regex as re
 
 
 LOC = 'San Francisco'
-TERM = 'Sushi'
-
-
-class Driver(object):
-    def __init__(self):
-        chromeOptions = webdriver.ChromeOptions()
-        prefs = {"profile.managed_default_content_settings.images": 2}
-        chromeOptions.add_experimental_option("prefs", prefs)
-        self.driver = webdriver.Chrome(chrome_options=chromeOptions)
-
-    def getDriver(self):
-        return self.driver
-
-
-def get_goog_reviews(link, numReviews, s):
-    returnBin = []
-    s = s.getDriver()
-    s.get(link)
-    s.find_element_by_link_text('View all Google reviews')
-    s.click()
-    print(s)
-    soup = bs(s.page_source, 'lxml')
-    print(soup)
-    # a = soup.find('a', {'data-async-trigger': 'reviewDialog'})
-    # print(a)
-
-
-def make_goog_review_bin(restaurants, num):
-    rDict = {}
-    sel = Driver()
-    for r in restaurants[:num]:
-        print('\nGathering reviews for:', r['name'])
-        url = 'https://www.google.com/search?q=' + r['name']
-        rDict[r['name']] = get_goog_reviews(url, 100, sel)
-        axes = ['rating', 'total_reviews', 'review']
-        print_review_stats(pd.DataFrame(rDict[r['name']], columns=axes))
+TERM = ''
 
 
 def f_text(s):
@@ -59,8 +22,6 @@ def scrape_yelp_reviews(link, numReviews):
         """ Every 20 reviews, get next page """
         r = req.get(link + '?start=' + str(i*20))
         s = bs(r.text, 'html.parser')
-        photoCount = int(f_text(s.find('a', {'class': 'see-more'}))[2])
-        revCount = int(f_text(s.find('span', {'class': 'review-count'}))[0])
         reviews = s.find_all('div', {'class': 'review'})
         for rev in reviews[1:]:  # Skip first emtpy one
             userMedia = rev.find('div', {'class': 'media-story'})
@@ -70,35 +31,57 @@ def scrape_yelp_reviews(link, numReviews):
             rating = reviewBin.find('div', {'class': 'i-stars'})['title']
             rating = float(rating.strip().split(' ')[0])
             text = reviewBin.find('p').get_text().strip()
-            returnBin.append([rating, userReviews, photoCount, revCount, text])
+            returnBin.append([rating, userReviews, text])
     return returnBin
 
 
-def print_review_stats(df):
+def scrape_yelp_other_data(link):
+    returnBin = []
+    r = req.get(link)
+    s = bs(r.text, 'html.parser')
+    photoCount = int(f_text(s.find('a', {'class': 'see-more'}))[2])
+    revCount = int(f_text(s.find('span', {'class': 'review-count'}))[0])
+    popDishBin = s.find_all('div', {'class': 'popular-dish-content'})
+    dishBin = []
+    if popDishBin is None:
+        return [photoCount, revCount, dishBin]
+    for d in popDishBin:
+        name = d.find('div', {'class': 'h4'}).get_text().strip()
+        numPhotos = d.find('small', {'class': 'photo-count'})
+        numPhotos = int(f_text(numPhotos)[0])
+        numReviews = d.find('small', {'class': 'review-count'})
+        numReviews = int(f_text(numReviews)[0])
+        dishBin.append([name, numPhotos, numReviews])
+    return [photoCount, revCount, dishBin]
+
+
+def print_review_stats(other, df):
     print('Mean rating:', np.mean(df['rating']))
     print('Mean user review count:', np.mean(df['total_reviews']))
     print('Sample size:', len(df['review']))
-    print('Photo count:', df['photoCount'][0])
-    print('Review count:', df['review count'][0])
-    print('Review photo ratio:', df['photoCount'][0]/df['rev count'][0])
+    print('Photo count:', other[0])
+    print('Review count:', other[1])
+    print('Review photo ratio:', other[0]/other[1])
+    print('Popular dishes', other[2])
 
 
 def make_yelp_review_bin(restaurants, num):
     rDict = {}
     for r in restaurants[:num]:
-        print('\nGathering reviews for:', r['name'])
+        name = r['name']
+        print('\nGathering reviews for:', name)
         url = 'https://www.yelp.com/biz'
         url += r['url'].split('/biz')[1].split('?')[0]
-        rDict[r['name']] = scrape_yelp_reviews(url, 100)
-        axes = ['rating', 'total_reviews', 'photoCount', 'rev count', 'review']
-        print_review_stats(pd.DataFrame(rDict[r['name']], columns=axes))
+        rDict[name] = scrape_yelp_reviews(url, 100)
+        other = scrape_yelp_other_data(url)
+        axes = ['rating', 'total_reviews', 'review']
+        print_review_stats(other, pd.DataFrame(rDict[r['name']], columns=axes))
 
 
 def main():
     num_restaurants = 10
     rests = util.get_top_yelp(LOC, TERM, num_restaurants)['businesses']
     yelpDict = make_yelp_review_bin(rests, num_restaurants)
-    # googDict = make_goog_review_bin(rests, num_restaurants)
 
 
 main()
