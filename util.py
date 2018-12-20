@@ -1,4 +1,4 @@
-""" Quick Restaurant Data Scraping (AGGREGATION) """
+""" Quick Restaurant Data Scraping """
 import requests as req
 from bs4 import BeautifulSoup as bs
 
@@ -32,7 +32,7 @@ def get_top_yelp(location, term, num):
     payload = {
         'term': term,
         'location': location,
-        'limit' : num
+        'limit': num
     }
 
     headers = {'Authorization': 'Bearer %s' % API_KEY}
