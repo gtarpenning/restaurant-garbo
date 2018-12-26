@@ -24,7 +24,6 @@ def get_michelin(city, number):
         data = scrape_michelin_page(link)
         dataList.append(data)
     else:
-
         pages = int(number/100 + 2)
         for page in range(1, pages):
             page = str(page)
