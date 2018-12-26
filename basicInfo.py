@@ -34,7 +34,7 @@ def get_rest_info(id):
     return infoBin
 
 
-def make_df_for_rests(loc, term, numRestaurants):
+def make_df_basic_info(loc, term, numRestaurants):
     restaurants = util.get_top_yelp(loc, term, numRestaurants)['businesses']
     restNames = []
     restInfo = []
@@ -50,7 +50,7 @@ def make_df_for_rests(loc, term, numRestaurants):
 
 def main():
     numRestaurants = 5
-    df1 = make_df_for_rests(LOC, TERM, numRestaurants)
+    df1 = make_df_basic_info(LOC, TERM, numRestaurants)
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):
         print(df1)
 

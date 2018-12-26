@@ -16,7 +16,7 @@ def get_all_infatuation(city):
         return False
 
     s = bs(r.text, 'html.parser')
-    links = s.find_all('a', 'feature--table__content')
+    links = s.find_all('a', 'class=feature--table__content')
     data = []
 
     for f in links:

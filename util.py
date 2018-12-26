@@ -32,7 +32,7 @@ def get_top_yelp(location, term, num):
     payload = {
         'term': term,
         'location': location,
-        'limit' : num
+        'limit': num
     }
 
     headers = {'Authorization': 'Bearer %s' % API_KEY}
