@@ -1,6 +1,7 @@
 import requests as req
 from bs4 import BeautifulSoup as bs
 import pandas as pd
+import util
 
 
 # City to locate Infatuation reviews
@@ -16,7 +17,7 @@ def get_all_infatuation(city):
         return False
 
     s = bs(r.text, 'html.parser')
-    links = s.find_all('a', 'feature--table__content')
+    links = s.find_all('a', 'class=feature--table__content')
     data = []
 
     for f in links:
@@ -67,7 +68,15 @@ def add_review_text(rBin):
 
 if __name__ == '__main__':
     c = CITY.replace(' ', '-')
-    data = get_all_infatuation(c)[:5]
-    data = add_review_text(data)
+    fName = 'blogs.data'
+    data = None
+    if util.open_data(fName) is None:
+        print("Getting new data")
+        data = get_all_infatuation(c)[:5]
+        data = add_review_text(data)
+        # util.store_data(data, fName)
+    else:
+        print("Using stored data")
+        # data = util.open_data(fName)
     df = pd.DataFrame(data)
     print(df)
