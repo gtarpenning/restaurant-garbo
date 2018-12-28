@@ -18,21 +18,19 @@ def get_zomato_data(city, term):
     r = req.get(baseLink + 'search?city_id=' + cityID + '&q=' + term, headers=h)
     response = json.loads(r.text)
 
-    rBin = []
+    rDict = {}
     for restaurant in response['restaurants']:
         r = restaurant['restaurant']
-        a_cost = r['average_cost_for_two']
-        rating = r['user_rating']['aggregate_rating']
-        votes = r['user_rating']['votes']
-        o_support = r['opentable_support']
-        rBin.append([r['name'], rating, votes, a_cost, o_support])
-
-    cols = ['name', 'rating', 'votes', 'average cost for 2', 'open table']
-    return pd.DataFrame(data=rBin, columns=cols)
+        rDict[r] = {}
+        rDict[r]['z-cost'] = r['average_cost_for_two']
+        rDict[r]['z-rating'] = r['user_rating']['aggregate_rating']
+        rDict[r]['z-votes'] = r['user_rating']['votes']
+        rDict[r]['z-o_support'] = r['opentable_support']
+    return rDict
 
 
 def main():
-    print(get_zomato_data(CITY, TERM))
+    print(get_data(CITY, TERM))
 
 
 if __name__ == '__main__':
