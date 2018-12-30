@@ -8,34 +8,28 @@ CITY = 'San Francisco'
 City = CITY.replace(" ", "-").lower()
 baseLink = 'https://guide.michelin.com/us/'
 # Ratings are : Plate, Bib Gourmand, 1 star, 2 stars, 3 stars
-ratingDict = {'‹': 1, '=': 2, 'm': 3, 'n': 4, 'o': 5}
+RATING_LOOKUP = {'‹': 1, '=': 2, 'm': 3, 'n': 4, 'o': 5}
 
 
-def get_all_michelin(city):
-    return get_michelin(city, 5000)
-
-
-def get_michelin(city, number):
-    dataBin = {}
-    dataList = []
+def get_data_by_city(number, city):
+    dataDict = {}
     if number <= 100:
-        link = baseLink + City + '/restaurants/page/1?max='
-        + number + '&sort=relevance&order=desc'
-        data = scrape_michelin_page(link)
-        dataList.append(data)
+        link = (baseLink + city.replace(" ", "-").lower()
+                + '/restaurants/page/1?max=' + str(number)
+                + '&sort=relevance&order=desc')
+        return scrape_michelin_page(link)
     else:
         pages = int(number/100 + 2)
         for page in range(1, pages):
             page = str(page)
-            link = baseLink + City + '/restaurants/page/' + page + '?max=100&sort=relevance&order=desc'
+            link = (baseLink + city.replace(" ", "-").lower()
+                    + '/restaurants/page/' + page
+                    + '?max=100&sort=relevance&order=desc')
             data = scrape_michelin_page(link)
             if data is False:
                 break
-            dataList.append(data)
-    dataList = dataList[:number]
-    for data in dataList:
-        dataBin.update(data)
-    return dataBin
+            dataDict = dict(dataDict, **data)
+    return dataDict
 
 
 def scrape_michelin_page(link):
@@ -50,13 +44,13 @@ def scrape_michelin_page(link):
     for f in links:
         nameValues = f.find('div', {'class': 'resto-inner-title'}).get_text().strip().split('\n')
         name = nameValues[0]
-        ratingRaw = nameValues[1].strip()
-        rating = ratingDict[ratingRaw]
+        data[name] = {}
+        ratingRaw = str(nameValues[1].strip())
+        data[name]['m-rating'] = RATING_LOOKUP[ratingRaw]
         restInfoHelper = f.find('div', {'class': 'resto-inner-category'}).get_text().strip().split("·")
-        cuisine = restInfoHelper[0].strip()
-        neighborhood = restInfoHelper[1].strip()
-        price = restInfoHelper[2].strip()
-        data.update({name: [rating, price, cuisine, neighborhood]})
+        data[name]['m-cuisine'] = restInfoHelper[0].strip()
+        data[name]['m-neighborhood'] = restInfoHelper[1].strip()
+        data[name]['m-price'] = restInfoHelper[2].strip()
     return data
 
 
@@ -72,4 +66,5 @@ def main():
         print(df1)
 
 
-main()
+if __name__ == '__main__':
+    main()

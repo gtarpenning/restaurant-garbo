@@ -7,45 +7,40 @@ import pandas as pd
 LOC = 'San Francisco'
 TERM = 'Mexican'
 API_KEY = 'RERrcqtrW3V1ARX5kr_3VC9H8DnboL7bkyVf5HdQ-XiRi-hPm2jX_TRBUuc8lDFtYKKF2B_PT1fDai2hsVwCdirNc5Hrk7k9krlw7Vt---u9tZTXjbDZGRyYAxnOW3Yx'
+HEADERS = {'Authorization': 'Bearer %s' % API_KEY}
 
 
-def get_rest_info(id):
-    infoBin = []
-    headers = {'Authorization': 'Bearer %s' % API_KEY}
+def get_rest_info_dict(id):
     r = req.get('https://api.yelp.com/v3/businesses/' + id,
-                headers=headers)
+                headers=HEADERS)
     response = r.json()
-    price = response['price']
+
+    returnDict = {}
+    returnDict['y-price'] = response['price']
     days = response['hours']
-    restHours = {}
+    returnDict['restHours'] = {}
     for day in days[0]['open']:
         dayHours = (day['start'], day['end'])
-        restHours[day['day']] = dayHours
-    coords = (response['coordinates']['latitude'],
-              response['coordinates']['longitude'])
-    categories = []
+        returnDict['restHours'][day['day']] = dayHours
+    returnDict['coords'] = (response['coordinates']['latitude'],
+                            response['coordinates']['longitude'])
+    returnDict['categories'] = []
     for category in response['categories']:
-        categories.append(category["title"])
-    phone = response['phone']
-    isClaimed = response['is_claimed']
-    transactions = response['transactions']
-    infoBin += [price, restHours, coords, categories, phone,
-                isClaimed, transactions]
-    return infoBin
+        returnDict['categories'].append(category["title"])
+    returnDict['phone'] = response['phone']
+    returnDict['isClaimed'] = response['is_claimed']
+    returnDict['transactions'] = response['transactions']
+
+    return returnDict
 
 
-def make_df_basic_info(loc, term, numRestaurants):
-    restaurants = util.get_top_yelp(loc, term, numRestaurants)['businesses']
-    restNames = []
-    restInfo = []
+def get_data_by_city(num, city, term):
+    restaurants = util.get_top_yelp(city, term, num)
+    rDict = {}
     for rest in restaurants:
-        restNames.append(rest['name'])
-        restInfo.append(get_rest_info(rest['id']))
-    axes = ['price', 'hours', 'coordinates', 'categories', 'phone',
-            'isClaimed', 'transactions']
-    df = pd.DataFrame.from_dict(dict(zip(restNames, restInfo)),
-                                orient='index', columns=axes)
-    return df
+        rDict[rest['name']] = get_rest_info_dict(rest['id'])
+
+    return rDict
 
 
 def main():
@@ -55,4 +50,5 @@ def main():
         print(df1)
 
 
-main()
+if __name__ == '__main__':
+    main()
